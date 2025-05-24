@@ -1,0 +1,105 @@
+ÕùSsàmä ÇhiBånē
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>حاسبة المعدل الجامعي</title>
+    <style>
+        /* نفس التصميم السابق ... */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>حاسبة المعدل الجامعي</h1>
+        <div>
+            <label for="num-courses">عدد المواد (بين 5 و 10):</label>
+            <input type="number" id="num-courses" min="5" max="10" value="5">
+            <button id="generate-btn">إنشاء حقول المواد</button>
+        </div>
+        <div id="courses-container"></div>
+        <button id="calculate-btn" style="display: none; background-color: #2ecc71;">حساب المعدل</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 1. دالة إنشاء حقول المواد
+        function generateCourses() {
+            const numCourses = parseInt(document.getElementById("num-courses").value);
+            if (numCourses < 5 || numCourses > 10) {
+                alert("عدد المواد يجب أن يكون بين 5 و 10");
+                return;
+            }
+
+            const container = document.getElementById("courses-container");
+            container.innerHTML = "";
+
+            for (let i = 0; i < numCourses; i++) {
+                container.innerHTML += 
+                    <div class="course-box">
+                        <h3>المادة ${i+1}</h3>
+                        <label for="coeff-${i}">معامل المادة:</label>
+                        <input type="number" id="coeff-${i}" step="0.5" min="1" value="1">
+                        <label for="has-exam-${i}">هل يوجد فرض؟</label>
+                        <select id="has-exam-${i}" onchange="toggleTestFields(${i})">
+                            <option value="نعم">نعم</option>
+                            <option value="لا">لا</option>
+                        </select>
+                        <div id="exam-fields-${i}">
+                            <label for="exam-mark-${i}">علامة الامتحان (من 20):</label>
+                            <input type="number" id="exam-mark-${i}" min="0" max="20" step="0.5" value="10">
+                        </div>
+                        <div id="test-fields-${i}" style="display: none;">
+                            <label for="test-mark-${i}">علامة الفرض (من 20):</label>
+                            <input type="number" id="test-mark-${i}" min="0" max="20" step="0.5" value="10">
+                        </div>
+                    </div>
+                ;
+            }
+            document.getElementById("calculate-btn").style.display = "block";
+        }
+
+        // 2. دالة تبديل حقول الفرض
+        function toggleTestFields(index) {
+            const hasExam = document.getElementById(has-exam-${index}).value;
+            document.getElementById(test-fields-${index}).style.display = 
+                (hasExam === "نعم") ? "block" : "none";
+        }
+
+        // 3. دالة حساب المعدل
+        function calculateGPA() {
+            try {
+                const numCourses = parseInt(document.getElementById("num-courses").value);
+                let totalPoints = 0, totalCoeff = 0;
+
+                for (let i = 0; i < numCourses; i++) {
+                    const coeff = parseFloat(document.getElementById(coeff-${i}).value);
+                    const hasExam = document.getElementById(has-exam-${i}).value;
+                    const examMark = parseFloat(document.getElementById(exam-mark-${i}).value);
+                    
+                    let courseAvg;
+                    if (hasExam === "نعم") {
+                        const testMark = parseFloat(document.getElementById(test-mark-${i}).value);
+                        courseAvg = (testMark * 0.4 + examMark * 0.6) * coeff;
+                    } else {
+                        courseAvg = examMark * coeff;
+                    }
+                    totalPoints += courseAvg;
+                    totalCoeff += coeff;
+                }
+
+const finalGPA = totalPoints / totalCoeff;
+                document.getElementById("result").innerHTML = 
+                    <strong>معدلك الجامعي هو: ${finalGPA.toFixed(2)} / 20</strong>;
+                document.getElementById("result").style.display = "block";
+            } catch (error) {
+                alert("حدث خطأ! تأكد من إدخال جميع القيم.");
+                console.error(error);
+            }
+        }
+
+        // 4. ربط الأحداث
+        document.getElementById("generate-btn").addEventListener("click", generateCourses);
+        document.getElementById("calculate-btn").addEventListener("click", calculateGPA);
+    </script>
+</body>
+</html>
