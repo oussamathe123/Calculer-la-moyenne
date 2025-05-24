@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>حاسبة المعدل الجامعي</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .course-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 5px;
+            border-right: 5px solid #3498db;
+            font-size: 18px;
+            display: none;
+        }
+        .hidden {
+            display: none;
+        }
+        .summary {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>حاسبة المعدل الجامعي</h1>
+        
+        <div>
+            <label for="num-courses">عدد المواد (بين 5 و 10):</label>
+            <input type="number" id="num-courses" min="5" max="10" value="5">
+            <button id="generate-btn">إنشاء حقول المواد</button>
+        </div>
+        
+        <div id="courses-container"></div>
+        
+        <button id="calculate-btn" style="display: none; background-color: #2ecc71;">حساب المعدل</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // دالة إنشاء حقول المواد
+        function generateCourses() {
+            const numCourses = parseInt(document.getElementById("num-courses").value);
+            
+            if (isNaN(numCourses) || numCourses < 5 || numCourses > 10) {
+                alert("الرجاء إدخال عدد مواد بين 5 و 10");
+                return;
+            }
+            
+            const container = document.getElementById("courses-container");
+            container.innerHTML = "";
+            
+            for (let i = 0; i < numCourses; i++) {
+                const courseDiv = document.createElement("div");
+                courseDiv.className = "course-box";
+                courseDiv.innerHTML = `
+                    <h3>المادة ${i+1}</h3>
+                    <label for="coeff-${i}">معامل المادة:</label>
+                    <input type="number" id="coeff-${i}" step="0.5" min="1" value="1">
+                    
+                    <label for="has-exam-${i}">هل يوجد فرض؟</label>
+                    <select id="has-exam-${i}" onchange="toggleTestFields(${i})">
+                        <option value="لا">لا</option>
+                        <option value="نعم">نعم</option>
+                    </select>
+                    
+                    <div id="exam-fields-${i}">
+                        <label for="exam-mark-${i}">علامة الامتحان (من 20):</label>
+                        <input type="number" id="exam-mark-${i}" min="0" max="20" step="0.5" value="10">
+                    </div>
+                    
+                    <div id="test-fields-${i}" class="hidden">
+                        <label for="test-mark-${i}">علامة الفرض (من 20):</label>
+                        <input type="number" id="test-mark-${i}" min="0" max="20" step="0.5" value="10">
+                    </div>
+                `;
+                container.appendChild(courseDiv);
+            }
+            
+            document.getElementById("calculate-btn").style.display = "block";
+            document.getElementById("result").style.display = "none";
+        }
+        
+        // دالة تبديل حقول الفرض
+        function toggleTestFields(index) {
+            const hasExam = document.getElementById(`has-exam-${index}`).value;
+            const testFields = document.getElementById(`test-fields-${index}`);
+            
+            if (hasExam === "نعم") {
+                testFields.classList.remove("hidden");
+            } else {
+                testFields.classList.add("hidden");
+            }
+        }
+        
+        // دالة حساب المعدل
+        function calculateGPA() {
+            try {
+                const numCourses = parseInt(document.getElementById("num-courses").value);
+                let totalPoints = 0;
+                let totalCoeff = 0;
+                const errorMessages = [];
+                let resultsDetails = "";
+                
+                for (let i = 0; i < numCourses; i++) {
+                    const coeff = parseFloat(document.getElementById(`coeff-${i}`).value);
+                    const hasExam = document.getElementById(`has-exam-${i}`).value;
+                    const examMark = parseFloat(document.getElementById(`exam-mark-${i}`).value);
+                    
+                    // التحقق من صحة المدخلات
+                    if (isNaN(coeff) || coeff <= 0) {
+                        errorMessages.push(`معامل المادة ${i+1} غير صالح`);
+                    }
+                    
+                    if (isNaN(examMark) || examMark < 0 || examMark > 20) {
+                        errorMessages.push(`علامة الامتحان للمادة ${i+1} غير صالحة`);
+                    }
+                    
+                    let coursePoints;
+                    let calculationDetails = "";
+                    
+                    if (hasExam === "نعم") {
+                        const testMark = parseFloat(document.getElementById(`test-mark-${i}`).value);
+                        if (isNaN(testMark) || testMark < 0 || testMark > 20) {
+                            errorMessages.push(`علامة الفرض للمادة ${i+1} غير صالحة`);
+                        }
+                        // الحساب: (نقطة الفرض × 0.4 + نقطة الامتحان × 0.6) × المعامل
+                        coursePoints = (testMark * 0.4 + examMark * 0.6) * coeff;
+                        calculationDetails = `((${testMark} × 0.4) + (${examMark} × 0.6)) × ${coeff} = ${coursePoints.toFixed(2)}`;
+                    } else {
+                        // إذا لم يكن هناك فرض: نقطة الامتحان × المعامل
+                        coursePoints = examMark * coeff;
+                        calculationDetails = `${examMark} × ${coeff} = ${coursePoints.toFixed(2)}`;
+                    }
+                    
+                    totalPoints += coursePoints;
+                    totalCoeff += coeff;
+                    
+                    resultsDetails += `
+                        <div class="summary">
+                            <strong>المادة ${i+1}:</strong>
+                            <p>${calculationDetails}</p>
+                            <p>النقاط: ${coursePoints.toFixed(2)}</p>
+                        </div>
+                    `;
+                }
+                
+                if (errorMessages.length > 0) {
+                    alert("الأخطاء التالية تحتاج إلى تصحيح:\n\n" + errorMessages.join("\n"));
+                    return;
+                }
+                
+                // حساب المعدل النهائي: مجموع النقاط / مجموع المعاملات
+                const finalGPA = totalPoints / totalCoeff;
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = `
+                    <strong>معدلك الجامعي هو: ${finalGPA.toFixed(2)} / 20</strong>
+                    <div class="summary">
+                        <p>مجموع النقاط: ${totalPoints.toFixed(2)}</p>
+                        <p>مجموع المعاملات: ${totalCoeff.toFixed(2)}</p>
+                    </div>
+                    <details>
+                        <summary>تفاصيل حساب كل مادة</summary>
+                        ${resultsDetails}
+                    </details>
+                `;
+                resultDiv.style.display = "block";
+                
+            } catch (error) {
+                alert("حدث خطأ غير متوقع! الرجاء التأكد من إدخال جميع القيم بشكل صحيح");
+                console.error(error);
+            }
+        }
+        
+        // ربط الأحداث عند تحميل الصفحة
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("generate-btn").addEventListener("click", generateCourses);
+            document.getElementById("calculate-btn").addEventListener("click", calculateGPA);
+        });
+    </script>
+</body>
+</html>
